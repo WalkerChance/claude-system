@@ -1,172 +1,231 @@
 ---
 name: productivity-agent
-description: Personal productivity agent that keeps you on top of your day. Use this skill for daily briefings, capturing tasks from Gmail or Slack, sending reminders and nudges, and running weekly reviews. Trigger any time the user says "morning briefing", "what's on my plate", "catch me up", "weekly review", "what did I miss", "capture tasks from my email", or "what should I focus on". Connects to Google Calendar, Gmail, Slack, and Notion. Always use this skill for any productivity, task management, or "get shit done" request.
+description: Personal productivity agent that keeps you on top of your day using Gmail and Google Calendar. Use this skill for daily briefings, capturing tasks from email, sending nudges about at-risk items, and running weekly reviews. Trigger any time the user says "morning briefing", "daily briefing", "what's on my plate", "catch me up", "weekly review", "what did I miss", "capture tasks from my email", "nudge me", or "what should I focus on". Always use this skill for any productivity, task management, or daily planning request.
 ---
 
 # Productivity Agent
 
-A personal productivity agent that connects your calendar, email, messages, and tasks into a unified system. It runs four core workflows that can be triggered individually or together.
+A personal productivity agent that connects Gmail and Google Calendar into a unified daily workflow. It runs four core workflows that can be triggered individually or chained together.
 
 ## MCP Requirements
 
-This skill requires the following MCP connections (check availability before running):
-- **Google Calendar** — `https://gcal.mcp.claude.com/mcp`
-- **Gmail** — `https://gmail.mcp.claude.com/mcp`
-- **Slack** — (configure in Claude Code MCP settings)
-- **Notion** — (configure API key in environment)
+This skill requires two MCP connections. Confirm both are available before running:
 
-If any connection is unavailable, note it and proceed with available sources.
+- **Gmail MCP** — provides `gmail_search_messages`, `gmail_read_message`, `gmail_read_thread`, `gmail_list_labels`, `gmail_create_draft`, `gmail_get_profile`
+- **Google Calendar MCP** — provides `gcal_list_events`, `gcal_get_event`, `gcal_find_my_free_time`, `gcal_list_calendars`, `gcal_create_event`, `gcal_respond_to_event`
+
+If either connection is unavailable, note it and work with what's available.
 
 ---
 
 ## Workflow 1: Daily Briefing
 
-Run each morning. Pulls together everything the user needs to start the day.
+Run each morning. Pulls together everything needed to start the day focused.
 
 ### Steps
 
-1. **Fetch today's calendar** — Pull all events for today from Google Calendar. Note times, locations, and any video links.
+1. **Fetch today's calendar**
+   - Call `gcal_list_events` with `timeMin` = start of today, `timeMax` = end of today
+   - Extract: event title, start/end time, location or video link, attendees
+   - Note any meeting invites needing a response (use `gcal_respond_to_event` if user wants to act)
 
-2. **Scan Gmail priority inbox** — Look for unread emails from the last 24 hours. Identify:
-   - Action items (emails requiring a reply or decision)
-   - Time-sensitive items (deadlines, meeting requests)
-   - FYIs (no action needed)
+2. **Find focus blocks**
+   - Call `gcal_find_my_free_time` for today
+   - Identify gaps of 30+ minutes — these are available focus windows
 
-3. **Check Slack mentions** — Pull unread @mentions and DMs from the last 24 hours. Flag anything requiring a response.
+3. **Scan priority inbox**
+   - Call `gmail_search_messages` with query: `is:unread newer_than:1d`
+   - For each message, call `gmail_read_message` to get subject + snippet
+   - Categorize each as:
+     - **Action Required** — needs a reply, decision, or action (keywords: "please review", "can you", "action required", "following up", "deadline", "by EOD", "RSVP")
+     - **Time-Sensitive** — meeting request, same-day deadline
+     - **FYI** — newsletters, notifications, CC'd updates (no reply needed)
 
-4. **Cross-reference with open tasks** — If Notion is connected, pull open tasks due today or overdue.
-
-5. **Generate briefing** — Output a structured daily briefing:
+4. **Generate briefing**
 
 ```
-## 🌅 Daily Briefing — [Date]
+## Daily Briefing — [Weekday, Month Day]
 
 ### Today's Schedule
-- [time] — [event title] ([location/link])
+- [HH:MM] — [Event Title] ([location or video link])
+- [HH:MM] — [Event Title]
 
-### Priority Inbox (Action Required)
-- [sender]: [subject] — [one-line summary + recommended action]
+### Focus Windows Available
+- [HH:MM–HH:MM] ([duration])
 
-### Slack (Needs Response)
-- [@channel or DM]: [summary]
+### Priority Inbox — Action Required
+- [Sender Name]: [Subject] — [one-line summary] → [recommended action]
 
-### Open Tasks Due Today
-- [ ] [task name] — [due time if set]
+### Time-Sensitive
+- [Sender Name]: [Subject] — [deadline or urgency]
+
+### FYI (no action needed)
+- [count] newsletters/notifications — skipped
 
 ### Focus Recommendation
-[1-2 sentences on what to tackle first and why]
+[1–2 sentences on what to tackle first and why, based on calendar load + inbox]
 ```
 
 ---
 
 ## Workflow 2: Task Capture
 
-Monitors Gmail and Slack for action items and writes them to Notion.
+Scans Gmail for action items and outputs them as a task list. Optionally blocks time on the calendar.
 
 ### Steps
 
-1. **Scan Gmail** — Look for emails containing action language: "please review", "can you", "by EOD", "deadline", "following up", "action required". Extract:
-   - Task description
-   - Who assigned it
-   - Deadline (if mentioned)
-   - Source email link
+1. **Search Gmail for action language**
+   - Call `gmail_search_messages` with query: `is:unread ("please review" OR "can you" OR "action required" OR "following up" OR "deadline" OR "by EOD" OR "need your" OR "waiting on you")`
+   - Also search: `is:starred newer_than:7d` for starred-but-unresolved emails
 
-2. **Scan Slack** — Look for DMs or @mentions with action language. Same extraction as above.
+2. **Extract task details**
+   - For each hit, call `gmail_read_message` to get full context
+   - Extract:
+     - **Task**: what needs to be done (one sentence)
+     - **From**: sender name + email
+     - **Deadline**: any date/time mentioned, or "unspecified"
+     - **Message ID**: for linking back
 
-3. **Deduplicate** — Check if a task already exists in Notion before creating it.
+3. **Deduplicate**
+   - If the same task appears in multiple messages (a thread), count it once
+   - Use `gmail_read_thread` to collapse threads before extracting
 
-4. **Write to Notion** — Create a task entry for each new item:
-   - Title: short task description
-   - Source: Gmail / Slack + sender
-   - Due date: extracted or blank
-   - Status: To Do
-   - Link: direct link to source email or message
+4. **Output task list**
 
-5. **Confirm** — Report back: "Captured X new tasks to Notion."
+```
+## Captured Tasks — [Date]
+
+- [ ] [Task description] — from [Sender] | due: [deadline] | [message link if available]
+- [ ] [Task description] — from [Sender] | due: [deadline]
+...
+
+Total: [N] tasks captured
+```
+
+5. **Offer to block time** — Ask: "Want me to create calendar blocks for any of these?" If yes, call `gcal_create_event` for each selected task.
 
 ---
 
 ## Workflow 3: Nudge Engine
 
-Checks open tasks against the calendar and sends Slack reminders when things are at risk.
+Identifies tasks from email that are still unresolved and surfaces when to act on them based on free calendar time.
 
 ### Steps
 
-1. **Pull open tasks from Notion** — Filter for status = "To Do" or "In Progress" with a due date.
+1. **Find unresolved threads**
+   - Call `gmail_search_messages` with: `is:unread older_than:2d ("please review" OR "action required" OR "following up" OR "waiting on you")`
+   - These are emails that arrived with action language but haven't been replied to
 
-2. **Check calendar** — Identify busy blocks today that reduce available working time.
+2. **Also check for unanswered follow-ups**
+   - Call `gmail_search_messages` with: `subject:("following up") is:unread`
 
-3. **Flag at-risk tasks** — Any task due today or tomorrow where:
-   - The user has back-to-back meetings
-   - The task has been open for 3+ days with no status change
-   - The deadline is within 2 hours
+3. **Check calendar load**
+   - Call `gcal_find_my_free_time` for today and tomorrow
+   - Identify if the user has back-to-back meetings with little room to respond
 
-4. **Send Slack nudge** — For each at-risk task, send a DM to the user:
-   ```
-   ⚠️ Task at risk: "[task name]"
-   Due: [date/time]
-   Last updated: [N days ago]
-   → [link to Notion task]
-   ```
+4. **Flag at-risk items**
+   - An item is at-risk if:
+     - It has action language AND has been unread for 2+ days
+     - OR a deadline mentioned in the email is within 24 hours
+     - OR a meeting request hasn't been responded to
 
-5. **Report** — Summary of nudges sent.
+5. **Output nudge summary**
+
+```
+## Nudge Report — [Date]
+
+### At-Risk Items (act today)
+⚠️ [Sender]: [Subject] — [why it's at risk: X days unread / deadline today]
+⚠️ [Sender]: [Subject] — [why it's at risk]
+
+### Best Time to Work on These
+📅 You have free time at [HH:MM–HH:MM] today — block it for these tasks?
+
+### Pending Meeting Invites
+📨 [Event name] from [Organizer] — respond before [date]
+```
+
+6. **Offer actions** — For each item, offer to draft a reply (`gmail_create_draft`) or block focus time (`gcal_create_event`).
 
 ---
 
 ## Workflow 4: Weekly Review
 
-Run Friday EOD (or manually any time). Produces a structured review of the week.
+Run Friday EOD or any time. Produces a structured review of the week and a preview of next week.
 
 ### Steps
 
-1. **Pull completed tasks from Notion** — Filter for tasks marked Done this week.
+1. **Pull this week's calendar**
+   - Call `gcal_list_events` with `timeMin` = Monday 00:00, `timeMax` = Friday 23:59
+   - Count: total meetings, total hours in meetings
+   - Note any recurring vs one-off meetings
 
-2. **Pull incomplete tasks** — Tasks that were due this week but not completed.
+2. **Find next week's calendar**
+   - Call `gcal_list_events` with `timeMin` = next Monday, `timeMax` = next Friday
+   - Identify the top 3 commitments by time or importance
 
-3. **Review calendar** — Pull all events from Mon-Fri this week.
+3. **Scan for unresolved inbox items this week**
+   - Call `gmail_search_messages`: `is:unread after:[last Monday's date]`
+   - Identify threads that are unread and contain action language
 
-4. **Generate weekly review**:
+4. **Find free focus time next week**
+   - Call `gcal_find_my_free_time` for the next 5 business days
+   - Note the largest available blocks
+
+5. **Generate weekly review**
 
 ```
-## 📋 Weekly Review — Week of [Date]
+## Weekly Review — Week of [Month Day–Day]
 
-### ✅ Completed This Week
-- [task name]
+### This Week in Meetings
+- [N] meetings | ~[X] hours in meetings
+- Busiest day: [Day]
+- Notable: [any major meetings worth flagging]
 
-### ❌ Not Completed (Rolling Over)
-- [task name] — [recommended action: reschedule / drop / delegate]
+### Unresolved from This Week
+- [Sender]: [Subject] — [recommended action: reply / schedule / drop]
+- [Sender]: [Subject] — [recommended action]
 
-### 📅 Meetings & Events
-- [count] meetings | [total hours] hours in meetings
+### Next Week Preview
+📅 Top commitments:
+- [Event] on [Day]
+- [Event] on [Day]
 
-### 🔮 Next Week Preview
-- [top 3 priorities for next week based on open tasks + calendar]
+🔓 Best focus windows:
+- [Day HH:MM–HH:MM] ([duration])
 
-### 💡 Reflection Prompt
-[One question to prompt the user to think about their week]
+### Reflection Prompt
+[One rotating question to close out the week — see rotation below]
 ```
 
-5. **Update Notion** — Move incomplete tasks to next week, log the review.
+6. **Reflection prompt rotation** — Rotate through these (don't repeat consecutively):
+   - "What's one thing you'd do differently if you ran this week again?"
+   - "What slipped through the cracks that you need to catch next week?"
+   - "What were you most proud of completing this week?"
+   - "Where did you feel most reactive vs. proactive?"
+   - "What's the one thing that would make next week a success?"
 
 ---
 
 ## Orchestration
 
-All four workflows can be chained. Common patterns:
+Common workflow chains:
 
-```
-Morning routine:    Daily Briefing → Task Capture
-Midday check-in:    Nudge Engine
-End of week:        Nudge Engine → Weekly Review
-```
-
-To run a chain, specify which workflows in your prompt: "Run my morning routine" triggers Daily Briefing + Task Capture automatically.
+| Pattern | Trigger | Workflows |
+|---------|---------|-----------|
+| Morning routine | "Run my morning briefing" | Briefing → Task Capture |
+| Midday check-in | "Nudge me" / "What am I missing?" | Nudge Engine |
+| End of week | "Weekly review" | Nudge Engine → Weekly Review |
+| Full daily | "Full daily check" | Briefing → Task Capture → Nudge Engine |
 
 ---
 
-## Notes
+## Notes & Edge Cases
 
-- Always confirm MCP connections at the start of any workflow.
-- If Notion isn't available, output tasks as a markdown list and ask where to save them.
-- Nudges should feel helpful, not naggy — max 3 nudges per day.
-- The weekly review reflection prompt should rotate — don't repeat the same question two weeks in a row.
+- **Always confirm MCP connections first** — if Gmail is down, skip email steps and run calendar-only briefing
+- **Max 5 action items in briefing** — if more than 5 unread action emails, show top 5 and note the count
+- **Don't read full bodies for FYI** — use subject + snippet only to keep responses fast
+- **gmail_create_draft only** — this skill never sends email directly; it creates drafts for the user to review
+- **Timezone awareness** — always use the user's local timezone for calendar queries; infer from their calendar settings via `gcal_list_calendars`
+- **Nudge limit** — surface at most 5 at-risk items per nudge run to avoid overwhelming
+- **Reflection prompt rotation** — track which prompt was last used in the conversation context and skip it next time
