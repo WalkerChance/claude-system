@@ -46,7 +46,7 @@ Write-Host ""
 
 # Action: run PowerShell with ExecutionPolicy bypass so no profile is needed
 $psExe  = "powershell.exe"
-$psArgs = "-NonInteractive -ExecutionPolicy Bypass -File `"$resolvedScript`""
+$psArgs = '-NonInteractive -ExecutionPolicy Bypass -File "{0}"' -f $resolvedScript
 
 $action  = New-ScheduledTaskAction -Execute $psExe -Argument $psArgs
 $trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Friday -At $RunAt
@@ -71,7 +71,7 @@ $principal = New-ScheduledTaskPrincipal `
 $fullPath = "$TaskPath$TaskName"
 
 if (Get-ScheduledTask -TaskPath $TaskPath -TaskName $TaskName -ErrorAction SilentlyContinue) {
-    Write-Host "Existing task found — updating..."
+    Write-Host "Existing task found - updating..."
     Unregister-ScheduledTask -TaskPath $TaskPath -TaskName $TaskName -Confirm:$false
 }
 
