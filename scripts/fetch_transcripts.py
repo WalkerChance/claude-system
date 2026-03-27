@@ -27,13 +27,14 @@ def fetch_transcript(video_id: str) -> tuple[str | None, str | None]:
     Returns (transcript_text, error_message).
     """
     try:
-        from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled
+        from youtube_transcript_api import YouTubeTranscriptApi
     except ImportError:
         print("Error: youtube-transcript-api not installed. Run: pip install youtube-transcript-api", file=sys.stderr)
         sys.exit(1)
 
     try:
-        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+        api = YouTubeTranscriptApi()
+        transcript_list = api.list(video_id)
 
         # Prefer manually created English, fall back to auto-generated, then any language
         try:
@@ -48,7 +49,7 @@ def fetch_transcript(video_id: str) -> tuple[str | None, str | None]:
                 ).translate("en")
 
         entries = transcript.fetch()
-        text = " ".join(entry["text"] for entry in entries)
+        text = " ".join(entry.get("text", "") if isinstance(entry, dict) else entry.text for entry in entries)
         # Clean up common transcript artifacts
         text = text.replace("\n", " ").replace("[Music]", "").replace("[Applause]", "")
         text = " ".join(text.split())  # normalize whitespace

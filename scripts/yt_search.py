@@ -28,7 +28,7 @@ def slugify(text: str) -> str:
 def search_youtube(query: str, max_results: int) -> list[dict]:
     """Use yt-dlp to search YouTube and return video metadata."""
     cmd = [
-        "yt-dlp",
+        sys.executable, "-m", "yt_dlp",
         f"ytsearch{max_results}:{query}",
         "--dump-json",
         "--no-playlist",
@@ -39,7 +39,7 @@ def search_youtube(query: str, max_results: int) -> list[dict]:
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
     except FileNotFoundError:
-        print("Error: yt-dlp not found. Install it with: pip install yt-dlp", file=sys.stderr)
+        print("Error: yt_dlp module not found. Install it with: pip install yt-dlp", file=sys.stderr)
         sys.exit(1)
     except subprocess.TimeoutExpired:
         print("Error: YouTube search timed out.", file=sys.stderr)

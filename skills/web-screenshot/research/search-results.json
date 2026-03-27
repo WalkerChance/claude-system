@@ -1,0 +1,105 @@
+{
+  "query": "browser automation screenshots Python playwright",
+  "results": [
+    {
+      "id": "OR_AAooiIK4",
+      "title": "Python Playwright Beginner[2023] Part 7: TraceViewer| Capture Page Actions, Screenshot, Newwork Call",
+      "channel": "Testing Tutorialspoint",
+      "duration_seconds": 680,
+      "view_count": 591,
+      "upload_date": "20230314",
+      "url": "https://www.youtube.com/watch?v=OR_AAooiIK4",
+      "description_snippet": "\ud83d\udc49Check Out Our Other Playlist As well:\nChannel Main Link: https://youtube.com/@testingtutorialspoint\n\n_______________ Frameworks____________________\n\u27a1\ufe0f Cypress with Cucumber Framework \u2192 https://www.yo"
+    },
+    {
+      "id": "NfQw_JxIDQg",
+      "title": "Take Website Screenshots With Python and Playwright",
+      "channel": "Real Python",
+      "duration_seconds": 317,
+      "view_count": 1731,
+      "upload_date": "20250602",
+      "url": "https://www.youtube.com/watch?v=NfQw_JxIDQg",
+      "description_snippet": "Learn how to use Playwright with Python to take automated screenshots of web elements\u2014no browser window required. In this video, you'll see how to:\n\nCapture a screenshot of a specific HTML element (li"
+    },
+    {
+      "id": "PE3mKj7wnpQ",
+      "title": "#7 - How To Take Screenshots | Videos | Trace Files in Playwright",
+      "channel": "Mukesh otwani",
+      "duration_seconds": 527,
+      "view_count": 11803,
+      "upload_date": "20221129",
+      "url": "https://www.youtube.com/watch?v=PE3mKj7wnpQ",
+      "description_snippet": "In this video, you will learn how to enable screenshots, videos, and trace files in playwright.\n\nPlaywright Series\nhttps://youtube.com/playlist?list=PL6flErFppaj0iQG2_Dd72Jz0bfrzZwMZH\n\nJavaScript Seri"
+    },
+    {
+      "id": "TpKhqbeeDbk",
+      "title": "Agentic AI Workflow Demo \u2014 Automated Job Screenshot Agent (Python + Playwright)",
+      "channel": "Bandaru Geethika",
+      "duration_seconds": 338,
+      "view_count": 6,
+      "upload_date": "20260327",
+      "url": "https://www.youtube.com/watch?v=TpKhqbeeDbk",
+      "description_snippet": "This video demonstrates a Job Screenshot Agent built as part of an engineering take-home challenge.\n\nThe system is designed as an agentic AI workflow that automates a multi-step task with minimal huma"
+    },
+    {
+      "id": "cO997sPYZ9U",
+      "title": "Playwright Python Browser Automation Crash Course | For Beginners",
+      "channel": "Jie Jenn",
+      "duration_seconds": 1129,
+      "view_count": 8852,
+      "upload_date": "20240901",
+      "url": "https://www.youtube.com/watch?v=cO997sPYZ9U",
+      "description_snippet": "Coming from a heavy Selenium user in the past, Playwright is my go-to framework today for browser automation and web scraping for dynamic web sites. In this Playwright crash course, I will go over the"
+    },
+    {
+      "id": "7bXqHr1KkOQ",
+      "title": "8 Playwright Tutorial: Managing Cookies for Efficient Web Testing & Screenshot #playwright #python",
+      "channel": "Prasanth Test Architect ",
+      "duration_seconds": 762,
+      "view_count": 6777,
+      "upload_date": "20230622",
+      "url": "https://www.youtube.com/watch?v=7bXqHr1KkOQ",
+      "description_snippet": "Get all the cookies from page.\nmy_cookies = page.context.cookies()\n\nClearing all the cookies.\npage.context.clear_cookies()\n\nSetting new cookies to page.\npage.context.add_cookies([new_cookies])\n\nTaking"
+    },
+    {
+      "id": "6z6wSsh2p08",
+      "title": "How to use Copilot Agent Browser to generate Playwright tests FAST.",
+      "channel": "Artem Bondar",
+      "duration_seconds": 514,
+      "view_count": 19263,
+      "upload_date": "20250703",
+      "url": "https://www.youtube.com/watch?v=6z6wSsh2p08",
+      "description_snippet": "\u2709\ufe0f Sign up for my Newsletter: https://artembondar.kit.com/newsletter-yt\n\n\ud83c\udfad Learn Microsoft Playwright from scratch in the \"Playwright UI Testing Mastery\" Program here: \ud83d\udc49 https://bondaracademy.com/prog"
+    },
+    {
+      "id": "zwmL_IMfgdA",
+      "title": "Playwright with Javascript | How to capture Screenshots | Part 29",
+      "channel": "SDET- QA",
+      "duration_seconds": 1168,
+      "view_count": 21282,
+      "upload_date": "20230710",
+      "url": "https://www.youtube.com/watch?v=zwmL_IMfgdA",
+      "description_snippet": "#playwright #javascript \n\n#########################################\n                         \ud83d\ude80 Udemy Courses \ud83d\udc68\u200d\ud83d\udcbb\ud83d\udc69\u200d\ud83d\udcbb\n##########################################\n\n\ud83d\udfe2 Playwright with TypeScript \ud83c\udfad\ud83d\udcd8\n\ud83d\udc49 https:"
+    },
+    {
+      "id": "I9kO6-yPkfM",
+      "title": "Claude Code + Playwright = INSANE Browser Automations",
+      "channel": "Chase AI",
+      "duration_seconds": 829,
+      "view_count": 69038,
+      "upload_date": "20260306",
+      "url": "https://www.youtube.com/watch?v=I9kO6-yPkfM",
+      "description_snippet": "\u26a1Master Claude Code, Build Your Agency, Land Your First Client\u26a1\nhttps://www.skool.com/chase-ai\n\n\ud83d\udd25FREE community with tons of AI resources\ud83d\udd25 \nhttps://www.skool.com/chase-ai-community\n\n\ud83d\udcbb Need custom work"
+    },
+    {
+      "id": "iEIFrRjfLJg",
+      "title": "#83 Run Playwright Script in Interactive Mode using Python Shell| Playwright with Python",
+      "channel": "AutomationNeemo",
+      "duration_seconds": 486,
+      "view_count": 1037,
+      "upload_date": "20221027",
+      "url": "https://www.youtube.com/watch?v=iEIFrRjfLJg",
+      "description_snippet": "#playwright \n#pytest \n#python \n\nIn this video we have discussed \nHow to run Playwright script in interactive mode using Python shell\n\nCode snippet:\nfrom playwright.sync_api import sync_playwright\nplay"
+    }
+  ]
+}
