@@ -6,7 +6,7 @@ A personal Claude Code system for automating research, productivity, and project
 
 ```bash
 # Clone and set up
-git clone https://github.com/YOUR_USERNAME/claude-system.git
+git clone https://github.com/WalkerChance/claude-system.git
 cd claude-system
 bash setup.sh
 ```
@@ -19,12 +19,6 @@ bash setup.sh
 |-------|-------------|
 | `skill-builder` | Research YouTube → generate report → author new skill → register it |
 | `productivity-agent` | Daily briefings, task capture from Gmail/Slack, nudges, weekly review |
-
-### Projects
-
-| Project | What it does |
-|---------|-------------|
-| `smite2-oracle` | Smite 2 god build recommendations powered by scraped pro build data |
 
 ### Scripts
 
