@@ -32,10 +32,9 @@ function Show-ToastNotification {
     try {
         $appId = "Claude.ProductivityAgent"
 
-        [Windows.UI.Notifications.ToastNotificationManager,
-         Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
-        [Windows.Data.Xml.Dom.XmlDocument,
-         Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null
+        [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
+        [Windows.UI.Notifications.ToastNotification, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
+        [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom, ContentType = WindowsRuntime] | Out-Null
 
         $template = @"
 <toast>
@@ -56,6 +55,7 @@ function Show-ToastNotification {
         # Fallback: balloon notification via System.Windows.Forms NotifyIcon
         try {
             Add-Type -AssemblyName System.Windows.Forms
+            Add-Type -AssemblyName System.Drawing
             $balloon = New-Object System.Windows.Forms.NotifyIcon
             $balloon.Icon = [System.Drawing.SystemIcons]::Information
             $balloon.BalloonTipIcon  = [System.Windows.Forms.ToolTipIcon]::$Icon
@@ -84,19 +84,26 @@ function Write-Log {
 # Setup
 # ---------------------------------------------------------------------------
 
-if (-not (Test-Path $LogDir)) {
-    New-Item -ItemType Directory -Path $LogDir | Out-Null
-}
+try {
+    if (-not (Test-Path $LogDir)) {
+        New-Item -ItemType Directory -Path $LogDir | Out-Null
+    }
 
-$datestamp     = Get-Date -Format "yyyy-MM-dd"
-$script:LogFile = Join-Path $LogDir "weekly_review_$datestamp.log"
+    $datestamp      = Get-Date -Format "yyyy-MM-dd"
+    $script:LogFile = Join-Path $LogDir "weekly_review_$datestamp.log"
+}
+catch {
+    Show-ToastNotification -Title "Weekly Review Failed" `
+        -Message "Could not initialise log directory: $_" -Icon "Error"
+    exit 1
+}
 
 Write-Log "=== Weekly Review Job Started ==="
 Write-Log "Recipient : $RecipientEmail"
 Write-Log "Log file  : $($script:LogFile)"
 
 # ---------------------------------------------------------------------------
-# Step 1 — Opening notification
+# Step 1 - Opening notification
 # ---------------------------------------------------------------------------
 
 Show-ToastNotification `
@@ -104,7 +111,7 @@ Show-ToastNotification `
     -Message "Claude is running your Friday review. Results will be drafted to Gmail."
 
 # ---------------------------------------------------------------------------
-# Step 2 — Locate claude CLI
+# Step 2 - Locate claude CLI
 # ---------------------------------------------------------------------------
 
 $ClaudeCli = Get-Command claude -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
@@ -130,7 +137,7 @@ if (-not $ClaudeCli) {
 Write-Log "Claude CLI: $ClaudeCli"
 
 # ---------------------------------------------------------------------------
-# Step 3 — Build the prompt
+# Step 3 - Build the prompt
 # ---------------------------------------------------------------------------
 
 $today = Get-Date -Format "dddd, MMMM d, yyyy"
@@ -138,23 +145,23 @@ $today = Get-Date -Format "dddd, MMMM d, yyyy"
 $prompt = @"
 Today is $today (Friday). Run both of these workflows in sequence using the productivity-agent skill:
 
-1. NUDGE ENGINE — surface any at-risk inbox items from this week that still need attention.
-2. WEEKLY REVIEW — full review of this week's calendar and inbox, plus next week preview.
+1. NUDGE ENGINE - surface any at-risk inbox items from this week that still need attention.
+2. WEEKLY REVIEW - full review of this week's calendar and inbox, plus next week preview.
 
 After generating both outputs, do the following:
 - Combine them into a single well-formatted email body (plain text, no HTML needed).
 - Use gmail_create_draft to create a draft addressed to $RecipientEmail with:
-    Subject: "Weekly Review — $today"
+    Subject: Weekly Review - $today
     Body: the combined Nudge Report followed by the Weekly Review (clearly separated with headers).
 - Confirm when the draft has been created.
 
-Important: create the draft even if some MCP data is incomplete — include whatever you were able to retrieve.
+Important: create the draft even if some MCP data is incomplete - include whatever you were able to retrieve.
 "@
 
 Write-Log "Prompt prepared. Invoking Claude..."
 
 # ---------------------------------------------------------------------------
-# Step 4 — Run Claude
+# Step 4 - Run Claude
 # ---------------------------------------------------------------------------
 
 $outputFile = Join-Path $LogDir "weekly_review_output_$datestamp.txt"
@@ -165,7 +172,7 @@ try {
     $process = Start-Process -FilePath $ClaudeCli `
         -ArgumentList @(
             "--dangerously-skip-permissions",
-            "-p", "`"$prompt`""
+            "-p", $prompt
         ) `
         -NoNewWindow `
         -Wait `
@@ -180,7 +187,8 @@ try {
     }
 
     $outputContent = Get-Content $outputFile -Raw
-    Write-Log "Claude output length: $($outputContent.Length) characters"
+    $outputLength  = if ($outputContent) { $outputContent.Length } else { 0 }
+    Write-Log "Claude output length: $outputLength characters"
 
     if ($outputContent -match "draft") {
         Write-Log "Draft creation confirmed in output."
@@ -189,7 +197,7 @@ try {
             -Message "Your Friday review is ready. Check Gmail Drafts for the summary."
     }
     else {
-        Write-Log "Draft keyword not detected in output — verify Gmail Drafts manually." "WARN"
+        Write-Log "Draft keyword not detected in output - verify Gmail Drafts manually." "WARN"
         Show-ToastNotification `
             -Title "Weekly Review Done (verify draft)" `
             -Message "Review ran but draft confirmation unclear. Check Gmail Drafts." `
@@ -206,7 +214,7 @@ catch {
 }
 
 # ---------------------------------------------------------------------------
-# Step 5 — Rotate old logs (keep last 12 weeks)
+# Step 5 - Rotate old logs (keep last 12 weeks)
 # ---------------------------------------------------------------------------
 
 try {
