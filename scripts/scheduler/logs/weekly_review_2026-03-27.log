@@ -1,0 +1,21 @@
+[2026-03-27 13:45:50] [INFO] === Weekly Review Job Started ===
+[2026-03-27 13:45:50] [INFO] Recipient : walkerhchance@gmail.com
+[2026-03-27 13:45:50] [INFO] Log file  : C:\Users\walke\OneDrive\Documents\AI\Claude Code\scripts\scheduler\logs\weekly_review_2026-03-27.log
+[2026-03-27 13:45:50] [INFO] Claude CLI: C:\Users\walke\.local\bin\claude.exe
+[2026-03-27 13:45:50] [INFO] Prompt prepared. Invoking Claude...
+[2026-03-27 13:46:06] [INFO] Claude exited with code: 0
+[2026-03-27 13:46:06] [INFO] Claude output length: 211 characters
+[2026-03-27 13:46:06] [WARN] Draft keyword not detected in output - verify Gmail Drafts manually.
+[2026-03-27 13:46:06] [INFO] Old log rotation complete.
+[2026-03-27 13:46:06] [INFO] === Weekly Review Job Finished ===
+[2026-03-27 13:57:44] [INFO] === Weekly Review Job Started ===
+[2026-03-27 13:57:44] [INFO] Recipient : walkerhchance@gmail.com
+[2026-03-27 13:57:44] [INFO] Log file  : C:\Users\walke\OneDrive\Documents\AI\Claude Code\scripts\scheduler\logs\weekly_review_2026-03-27.log
+[2026-03-27 13:57:44] [INFO] Claude CLI: C:\Users\walke\.local\bin\claude.exe
+[2026-03-27 13:57:44] [INFO] Prompt prepared. Invoking Claude...
+[2026-03-27 13:57:44] [INFO] Repo root : C:\Users\walke\OneDrive\Documents\AI\Claude Code\
+[2026-03-27 13:59:20] [INFO] Claude exited with code: 0
+[2026-03-27 13:59:20] [INFO] Claude output length: 1004 characters
+[2026-03-27 13:59:20] [INFO] Draft creation confirmed in output.
+[2026-03-27 13:59:20] [INFO] Old log rotation complete.
+[2026-03-27 13:59:20] [INFO] === Weekly Review Job Finished ===
