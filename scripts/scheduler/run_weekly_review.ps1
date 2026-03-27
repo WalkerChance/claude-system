@@ -140,7 +140,12 @@ Write-Log "Claude CLI: $ClaudeCli"
 # Step 3 - Build the prompt
 # ---------------------------------------------------------------------------
 
-$today = Get-Date -Format "dddd, MMMM d, yyyy"
+$today   = Get-Date -Format "dddd, MMMM d, yyyy"
+# Repo root is two directories up from scripts/scheduler/; Claude must run
+# there so it can read CLAUDE.md and load the productivity-agent skill, which
+# contains the instructions that trigger MCP tool calls (gmail_create_draft,
+# gcal_list_events, etc.).
+$repoRoot = (Resolve-Path "$PSScriptRoot\..\..\").Path
 
 $prompt = @"
 Today is $today (Friday). Run both of these workflows in sequence using the productivity-agent skill:
@@ -159,25 +164,40 @@ Important: create the draft even if some MCP data is incomplete - include whatev
 "@
 
 Write-Log "Prompt prepared. Invoking Claude..."
+Write-Log "Repo root : $repoRoot"
 
 # ---------------------------------------------------------------------------
 # Step 4 - Run Claude
 # ---------------------------------------------------------------------------
 
 $outputFile = Join-Path $LogDir "weekly_review_output_$datestamp.txt"
+$stderrFile = Join-Path $LogDir "weekly_review_stderr_$datestamp.txt"
+
+# Write the prompt to a temp file and feed it via stdin.
+# Rationale: Windows command-line quoting is unreliable for multi-line strings
+# that contain double-quote characters (the prompt includes them in the Subject
+# line). `--print` reads from stdin when no positional argument is given, with
+# --input-format text as the default - confirmed via: echo "..." | claude --print
+$promptFile = Join-Path $env:TEMP "claude_weekly_prompt_$datestamp.txt"
+Set-Content -Path $promptFile -Value $prompt -Encoding UTF8
 
 try {
-    # --dangerously-skip-permissions lets the scheduler run without interactive prompts.
-    # Remove this flag if you prefer to run interactively.
+    # --dangerously-skip-permissions bypasses all tool-use permission prompts
+    # (including MCP tools) so the scheduler can run unattended.
+    # -WorkingDirectory must point to the repo root so Claude reads CLAUDE.md
+    # and the productivity-agent SKILL.md, which instruct it to call
+    # gmail_create_draft and the Google Calendar MCP tools.
     $process = Start-Process -FilePath $ClaudeCli `
         -ArgumentList @(
             "--dangerously-skip-permissions",
-            "-p", $prompt
+            "--print"
         ) `
         -NoNewWindow `
         -Wait `
+        -WorkingDirectory $repoRoot `
+        -RedirectStandardInput  $promptFile `
         -RedirectStandardOutput $outputFile `
-        -RedirectStandardError  (Join-Path $LogDir "weekly_review_stderr_$datestamp.txt") `
+        -RedirectStandardError  $stderrFile `
         -PassThru
 
     Write-Log "Claude exited with code: $($process.ExitCode)"
@@ -211,6 +231,12 @@ catch {
         -Message "Error running Claude. See log: $($script:LogFile)" `
         -Icon "Error"
     exit 1
+}
+finally {
+    # Always remove the temp prompt file
+    if (Test-Path $promptFile) {
+        Remove-Item $promptFile -Force -ErrorAction SilentlyContinue
+    }
 }
 
 # ---------------------------------------------------------------------------
